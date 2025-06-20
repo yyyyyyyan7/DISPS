@@ -1,7 +1,7 @@
 # DISPS: Dual-Index Semantic Publish/Subscribe System
 
 > Official implementation of our paper:  
-> **"DISPS: Real-Time Semantic Publish/Subscribe via Dual-Index Clustering and Dynamic Topic Matching"**  
+> **"Semantic Publish/Subscribe over Evolving Topics"**  
 > (*Under review*)  
 
 DISPS is a scalable and low-latency publish/subscribe framework designed for real-time text streams. It organizes documents and subscriptions into evolving semantic topics through a dual-index architecture, leveraging dynamic pivot updates and the LocalPair Distance Metric for robust clustering and efficient matching.
