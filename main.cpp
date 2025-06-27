@@ -1,118 +1,170 @@
-
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <omp.h>
-#include <cmath>
-#include <iostream>
-#include "Cluster.cpp"
-#include "topic.cpp"
 #include <iterator>
-#include <future>
 #include <vector>
 #include <string>
 #include <mutex>
 #include <cassert>
 #include <chrono>
+#include "Cluster.cpp"
+#include "topic.cpp"
 
-TOPIC_clu topic_clu;          
+namespace Config {
+    constexpr int DIM = 1024;
+    constexpr float ALPHA = 0.66f;
+    constexpr float BETA = 8.88889f;
+    constexpr float TOPIC_THRESHOLD = 0.802f;
+    constexpr float MERGE_THRESHOLD = 0.3f;
+
+    constexpr int CHECK_FREQ = 10;
+    constexpr bool TEST_MODE = false;
+
+    constexpr int PUB_START_IDX = 1;
+    constexpr int MAX_PUB_COUNT = 1000000;
+    constexpr int SUB_LIMIT = 100000;
+    constexpr int REMAKE_INTERVAL = 10000;
+}
+
+// Global objects
+TOPIC_clu topic_clu;
 TOPIC_index topic_index;
-int D = 1024;  // dim 
-bool test = false;
-int check = 10;
-int SUB_id = 0;
-
-///////////////////////////////////////
-float alpha = 0.66;                     
-float beta = 8.88889;                  
-float threshold_for_topic = 0.802;      
-float merge_threshold = 0.3;            
-
-float x1 = 0.479;
-float x2 = 0.39;
-float x3 = 0.366;
 std::mutex mtx_topic;
 std::mutex mtx_clu;
 
-// 读取文件内容到内存
-void read_data(const std::string& text_file_path, const std::string& embeddings_file_path,
+/**
+ * @brief Reads text and embedding data from given files.
+ * Each line in text_file contains whitespace-separated tokens.
+ * Each line in embeddings_file contains comma-separated floats.
+ *
+ * @param text_file_path Path to text data file.
+ * @param embeddings_file_path Path to embedding vectors file.
+ * @param text_data Output container for tokenized text lines.
+ * @param embeddings_data Output container for float embedding vectors.
+ * @return true if both files are successfully read; false otherwise.
+ */
+bool read_data(const std::string& text_file_path,
+               const std::string& embeddings_file_path,
                std::vector<std::vector<std::string>>& text_data,
                std::vector<std::vector<float>>& embeddings_data) {
     std::ifstream text_file(text_file_path);
     std::ifstream embeddings_file(embeddings_file_path);
-    assert(text_file);
-    assert(embeddings_file);
+
+    if (!text_file.is_open()) {
+        std::cerr << "Error: Cannot open text file: " << text_file_path << std::endl;
+        return false;
+    }
+    if (!embeddings_file.is_open()) {
+        std::cerr << "Error: Cannot open embeddings file: " << embeddings_file_path << std::endl;
+        return false;
+    }
 
     std::string line_t, line_e;
-    while (getline(text_file, line_t) && getline(embeddings_file, line_e)) {
+    while (std::getline(text_file, line_t) && std::getline(embeddings_file, line_e)) {
+        // Tokenize text line by whitespace
         std::istringstream iss_t(line_t);
-        std::vector<std::string> line2vec{std::istream_iterator<std::string>{iss_t}, std::istream_iterator<std::string>{}};
-        text_data.push_back(line2vec);
+        std::vector<std::string> tokens{std::istream_iterator<std::string>{iss_t}, std::istream_iterator<std::string>{}};
+        text_data.push_back(std::move(tokens));
 
-        std::vector<float> text_embedding;
+        // Parse embedding vector from comma-separated floats
+        std::vector<float> embedding;
         std::istringstream iss_e(line_e);
-        std::string item;
-        while (getline(iss_e, item, ',')) {
-            text_embedding.push_back(std::stof(item));
+        std::string val;
+        while (std::getline(iss_e, val, ',')) {
+            try {
+                embedding.push_back(std::stof(val));
+            } catch (const std::exception& e) {
+                std::cerr << "Warning: Failed to parse float from '" << val << "' - " << e.what() << std::endl;
+            }
         }
-        embeddings_data.push_back(text_embedding);
+        embeddings_data.push_back(std::move(embedding));
     }
+
+    return true;
 }
 
 int main(int argc, char* argv[]) {
+    // Allow file paths from command line arguments, otherwise use defaults
+    const std::string text_file_path = (argc > 1) ? argv[1] : "dataset/short_texts.txt";
+    const std::string embeddings_file_path = (argc > 2) ? argv[2] : "dataset/short_vectors.csv";
 
-    int addCount = 0;
+    std::cout << "Starting clustering program..." << std::endl;
+    std::cout << "Text file: " << text_file_path << std::endl;
+    std::cout << "Embeddings file: " << embeddings_file_path << std::endl;
 
-    topic_clu.iniDimandThres(D, alpha, test, check);
-    topic_index.ini(beta,  test);
-
-    const std::string text_file_path = "dataset/short_texts.txt";
-    const std::string embeddings_file_path = "dataset/short_vectors.csv";
+    // Initialize clustering and topic index with configuration parameters
+    topic_clu.iniDimandThres(Config::DIM, Config::ALPHA, Config::TEST_MODE, Config::CHECK_FREQ);
+    topic_index.ini(Config::BETA, Config::TEST_MODE);
 
     std::vector<std::vector<std::string>> text_data;
     std::vector<std::vector<float>> embeddings_data;
 
-    read_data(text_file_path, embeddings_file_path, text_data, embeddings_data);
-
-    assert(text_data.size() == embeddings_data.size());
-    auto begintime = std::chrono::high_resolution_clock::now();
-
-    int countforPUB = 0;
-    int countforSUB = 0;
-    auto lasttime = std::chrono::high_resolution_clock::now();
-    bool flag = 0;
-    for (size_t i = 0; i < text_data.size(); ++i) {
-        const auto& text_embedding = embeddings_data[i];
-        std::vector<std::string>  line2vec = text_data[i];
-
-        if(flag){
-            countforPUB++;
-            int topic_find = topic_index.find_topic_HNSW(text_embedding, line2vec);
-            if (topic_find < 0) {
-                topic_clu.online_add(text_embedding, topic_index, line2vec);
-            }
-
-            if (countforPUB % 10000 == 0) {
-                topic_clu.remake();
-            }     
-            if(i==1000000){
-                break;
-            }
-        }else{
-            countforSUB++;        
-            topic_index.find_topK_topic(embeddings_data[i], SUB_id);
-            ++SUB_id;
-            
-            if(countforSUB == 100000){
-                flag = 1;
-                i = 1;
-            }
-
-        }
-
+    // Load data from files
+    if (!read_data(text_file_path, embeddings_file_path, text_data, embeddings_data)) {
+        std::cerr << "Failed to read input data. Exiting." << std::endl;
+        return -1;
+    }
+    if (text_data.size() != embeddings_data.size()) {
+        std::cerr << "Mismatch between number of text lines and embeddings." << std::endl;
+        return -1;
     }
 
-    topic_clu.go_to_nearest_topic(topic_index , 100);   
+    std::cout << "Loaded " << text_data.size() << " samples." << std::endl;
 
+    auto start_time = std::chrono::high_resolution_clock::now();
+
+    int pub_count = 0;
+    int sub_count = 0;
+    int SUB_id = 0;
+    bool publish_mode = false;
+
+    // Main processing loop: first subscription queries, then publishing
+    for (size_t i = 0; i < text_data.size(); ++i) {
+        const auto& embedding = embeddings_data[i];
+        const auto& text_line = text_data[i];
+
+        if (publish_mode) {
+            ++pub_count;
+
+            // Attempt to find an existing topic for the embedding
+            int topic_found = topic_index.find_topic_HNSW(embedding, text_line);
+            if (topic_found < 0) {
+                // If no topic found, add embedding to clustering structure
+                topic_clu.online_add(embedding, topic_index, text_line);
+            }
+
+            // Periodically rebuild the clustering index
+            if (pub_count % Config::REMAKE_INTERVAL == 0) {
+                std::cout << "Remaking clusters at publish count: " << pub_count << std::endl;
+                topic_clu.remake();
+            }
+
+            if (pub_count >= Config::MAX_PUB_COUNT) {
+                std::cout << "Reached maximum publish count limit. Exiting loop." << std::endl;
+                break;
+            }
+
+        } else {
+            ++sub_count;
+
+            // Process subscription queries (top-K topic search)
+            topic_index.find_topK_topic(embedding, SUB_id++);
+            if (sub_count >= Config::SUB_LIMIT) {
+                publish_mode = true;
+                // Reset index to start publishing from configured start index
+                i = Config::PUB_START_IDX - 1; // Because for loop increments i after continue
+                std::cout << "Switching to publish mode after " << sub_count << " subscription queries." << std::endl;
+            }
+        }
+    }
+
+    // Finalize clustering by adjusting topics to nearest clusters
+    topic_clu.go_to_nearest_topic(topic_index, 100);
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end_time - start_time;
+    std::cout << "Total processing time: " << elapsed.count() << " seconds." << std::endl;
+
+    std::cout << "Program finished successfully." << std::endl;
     return 0;
 }
