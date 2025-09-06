@@ -1,6 +1,5 @@
 # Embedding Dimension Analysis
 
-This document provides additional experimental results to address **Reviewer Comment D11**, which asked for a detailed analysis of embedding dimensionality.  
 We systematically compared **384, 768, 1024, and 1536 dimensions** on the **T dataset**, and evaluated the trade-off between clustering quality, online matching stability, and computational efficiency.
 
 ---
