@@ -1,5 +1,6 @@
 # Embedding Dimension Analysis
 
+In response to **Reviewer Comment D11**, we conducted a dedicated experiment to study the effect of embedding dimensionality on the performance of our framework.  
 The goal of this analysis is to understand how different vector dimensions influence the balance between **clustering accuracy**, **online stability**, and **processing efficiency**.  
 Such a study is crucial because the choice of dimensionality directly affects both **semantic expressiveness** and **system scalability** in real-time publish/subscribe scenarios.
 
@@ -31,9 +32,9 @@ This formulation ensures that no single factor dominates. Instead, it captures t
 
 ## Experimental Results
 
-To ensure **fairness and rigor**, we considered that different embedding dimensionalities may require different hyperparameter settings.  
-Therefore, for each dimension (384, 768, 1024, 1536), we performed a **grid search** over clustering thresholds and related parameters, and report the **best-performing configuration** in the results below.  
-This guarantees that the comparison reflects the intrinsic suitability of each dimensionality, rather than artifacts of suboptimal parameter choices.
+Recognizing that **different embedding dimensions may favor different hyperparameter settings**, we performed **grid search** for each dimensionality.  
+Rather than selecting only the single best configuration, we present **multiple promising configurations** from the search results.  
+This provides a more comprehensive view of how each dimensionality behaves under reasonable parameter choices, avoiding bias from focusing only on the absolute best run.
 
 The results are summarized in the following figure:
 
@@ -41,8 +42,8 @@ The results are summarized in the following figure:
   <img src="./figs/embedding_score_vs_nmi.png" alt="Embedding Dimension Comparison" width="550"/>
 </p>
 
-*Figure: Composite score vs. NMI under different embedding dimensions.  
-Each point corresponds to the best configuration obtained via grid search for that dimensionality.*  
+*Figure: Composite score vs. NMI for different embedding dimensions.  
+Each dimension is represented by **multiple points**, corresponding to different hyperparameter settings identified during grid search.*  
 
 ### Observations
 
@@ -53,29 +54,29 @@ Each point corresponds to the best configuration obtained via grid search for th
   While higher-dimensional vectors provide slightly richer representations, they also suffer from the **curse of dimensionality**. Distance metrics become less discriminative, leading to unstable topic assignments and fragmented clusters. Moreover, computational cost increases substantially, reflected in larger normalized runtime values.  
 
 - **1024 dimensions**:  
-  This setting strikes the **best trade-off**. It preserves enough semantic granularity to achieve high **NMI**, maintains consistently strong **FMR**, and avoids the overhead associated with very high-dimensional vectors. The results demonstrate that 1024 dimensions deliver both stable clustering and efficient runtime performance.
+  Across multiple parameter settings, this dimensionality consistently produces stronger results. It preserves enough semantic granularity to achieve high **NMI**, maintains strong **FMR**, and avoids the overhead associated with very high-dimensional vectors. The cluster of points in the figure shows that 1024 dimensions achieve both high scores and stable behavior across runs.
 
 ---
 
 ## Key Insights
 
 1. **Balance Between Quality and Efficiency**  
-   Lower dimensions (384/768) run faster but compromise semantic resolution. Higher dimensions (1536) enrich semantics but introduce instability and inefficiency. **1024 dimensions consistently outperform all other choices** by balancing these two extremes.  
+   Lower dimensions (384/768) run faster but compromise semantic resolution. Higher dimensions (1536) enrich semantics but introduce instability and inefficiency. **1024 dimensions consistently outperform other choices across a range of parameter settings.**
 
 2. **The Role of FastMatchRate (FMR)**  
    Unlike conventional clustering metrics, **FMR** directly measures *streaming robustness*. A higher FMR means documents are more likely to be matched on the fly, reducing computational overhead. This metric highlights the **practical value** of embedding dimensionality in online systems, beyond static clustering accuracy.  
 
-3. **Rigor Through Grid Search**  
-   By performing grid search for **each embedding dimension**, we ensure that every comparison is based on its **best configuration**. This eliminates bias from parameter selection and makes the results more trustworthy.  
+3. **Comprehensive Comparison Through Grid Search**  
+   By reporting **multiple promising configurations** for each dimension, we ensure that the results reflect the overall behavior of each setting, not just a cherry-picked best case. This provides a fairer and more transparent comparison.  
 
 4. **Justification of Default Choice**  
-   Based on empirical evidence, we adopt **1024 dimensions** as the default configuration in DISPS. This choice is not arbitrary but supported by systematic evaluation across accuracy (NMI), stability (FMR), and efficiency (NormTime).
+   Based on empirical evidence, we adopt **1024 dimensions** as the default configuration in DISPS. This choice is not arbitrary but supported by a broad set of experiments balancing **accuracy (NMI)**, **stability (FMR)**, and **efficiency (NormTime)**.
 
 ---
 
 ## Conclusion
 
 This analysis demonstrates that embedding dimensionality has a **non-trivial impact** on both the quality and scalability of real-time publish/subscribe systems.  
-Our results confirm that **1024-dimensional embeddings**, when properly tuned, provide the most favorable balance, making them the best choice for DISPS.  
+Our results confirm that **1024-dimensional embeddings**, when considered across multiple parameter configurations, provide the most favorable balance, making them the best choice for DISPS.  
 
 By sharing these results, we aim to increase transparency and reproducibility of our study. The **score function**, **grid search process**, and **raw experimental results** are available in this repository for further inspection.
