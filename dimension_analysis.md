@@ -31,11 +31,18 @@ This formulation ensures that no single factor dominates. Instead, it captures t
 
 ## Experimental Results
 
+To ensure **fairness and rigor**, we considered that different embedding dimensionalities may require different hyperparameter settings.  
+Therefore, for each dimension (384, 768, 1024, 1536), we performed a **grid search** over clustering thresholds and related parameters, and report the **best-performing configuration** in the results below.  
+This guarantees that the comparison reflects the intrinsic suitability of each dimensionality, rather than artifacts of suboptimal parameter choices.
+
 The results are summarized in the following figure:
 
 <p align="center">
   <img src="./figs/embedding_score_vs_nmi.png" alt="Embedding Dimension Comparison" width="550"/>
 </p>
+
+*Figure: Composite score vs. NMI under different embedding dimensions.  
+Each point corresponds to the best configuration obtained via grid search for that dimensionality.*  
 
 ### Observations
 
@@ -58,7 +65,10 @@ The results are summarized in the following figure:
 2. **The Role of FastMatchRate (FMR)**  
    Unlike conventional clustering metrics, **FMR** directly measures *streaming robustness*. A higher FMR means documents are more likely to be matched on the fly, reducing computational overhead. This metric highlights the **practical value** of embedding dimensionality in online systems, beyond static clustering accuracy.  
 
-3. **Justification of Default Choice**  
+3. **Rigor Through Grid Search**  
+   By performing grid search for **each embedding dimension**, we ensure that every comparison is based on its **best configuration**. This eliminates bias from parameter selection and makes the results more trustworthy.  
+
+4. **Justification of Default Choice**  
    Based on empirical evidence, we adopt **1024 dimensions** as the default configuration in DISPS. This choice is not arbitrary but supported by systematic evaluation across accuracy (NMI), stability (FMR), and efficiency (NormTime).
 
 ---
@@ -66,6 +76,6 @@ The results are summarized in the following figure:
 ## Conclusion
 
 This analysis demonstrates that embedding dimensionality has a **non-trivial impact** on both the quality and scalability of real-time publish/subscribe systems.  
-Our results confirm that **1024-dimensional embeddings** provide the most favorable balance, making them the best choice for DISPS.  
+Our results confirm that **1024-dimensional embeddings**, when properly tuned, provide the most favorable balance, making them the best choice for DISPS.  
 
-By sharing these results, we aim to increase transparency and reproducibility of our study. The **score function**, **evaluation process**, and **raw experimental results** are available in this repository for further inspection.
+By sharing these results, we aim to increase transparency and reproducibility of our study. The **score function**, **grid search process**, and **raw experimental results** are available in this repository for further inspection.
