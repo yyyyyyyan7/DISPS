@@ -1,62 +1,71 @@
 # Embedding Dimension Analysis
 
-We systematically compared **384, 768, 1024, and 1536 dimensions** on the **T dataset**, and evaluated the trade-off between clustering quality, online matching stability, and computational efficiency.
+The goal of this analysis is to understand how different vector dimensions influence the balance between **clustering accuracy**, **online stability**, and **processing efficiency**.  
+Such a study is crucial because the choice of dimensionality directly affects both **semantic expressiveness** and **system scalability** in real-time publish/subscribe scenarios.
+
+We systematically compared **384, 768, 1024, and 1536 dimensions** on the **T dataset**.  
+This dataset was chosen because it is representative of short-text streams, where semantic boundaries are often subtle and dimensionality plays a significant role.
 
 ---
 
 ## Evaluation Metric
 
-To jointly evaluate these aspects, we define a **composite score function**:
+To jointly evaluate clustering quality, online matching stability, and runtime efficiency, we define a **composite score function**:
 
 $$
 \text{Score} = \text{NMI} \times \text{FMR} \times (1 - \text{NormTime})
 $$
 
-
 where:  
-- **NMI**: Normalized Mutual Information with ground-truth topics (higher is better).  
-- **FMR (FastMatchRate)**: The probability that a document is directly assigned to an existing topic *during streaming* without requiring reprocessing (higher means more stable online clustering).  
-- **NormTime**: Processing time normalized into the range \([0,1]\) (lower is better, so we use \(1-\text{NormTime}\)).  
 
-This formulation ensures that embedding dimensionality is evaluated not only by clustering accuracy but also by its real-time efficiency and streaming robustness.
+- **NMI** (Normalized Mutual Information): Measures agreement with ground-truth topics. A higher value indicates better clustering accuracy.  
+- **FMR (FastMatchRate)**: The probability that a document is directly assigned to an existing topic *during streaming*, without needing a second round of processing. A higher FMR reflects stronger online stability and reduced overhead.  
+- **NormTime**: Processing time normalized to the range \([0,1]\). Lower values indicate better efficiency; we use \(1 - \text{NormTime}\) so that faster systems contribute positively to the score.  
+
+This formulation ensures that no single factor dominates. Instead, it captures the **three key dimensions** that matter in our streaming system:  
+1. **Accuracy (NMI)**: Do embeddings help separate topics correctly?  
+2. **Stability (FMR)**: Do embeddings allow real-time assignment without reprocessing?  
+3. **Efficiency (NormTime)**: Do embeddings support low-latency operation at scale?
 
 ---
 
 ## Experimental Results
 
-The following figure summarizes the results:
+The results are summarized in the following figure:
 
-![Embedding Dimension Comparison](./figs/embedding_score_vs_nmi.png)
+<p align="center">
+  <img src="./figs/embedding_score_vs_nmi.png" alt="Embedding Dimension Comparison" width="550"/>
+</p>
+
+### Observations
 
 - **384 / 768 dimensions**:  
-  Semantic information is overly compressed. Topic boundaries become blurred, and the FastMatchRate drops significantly, indicating that many documents require reprocessing instead of being matched directly.  
+  These embeddings compress semantic information too aggressively. As a result, topic boundaries become blurred and NMI drops. The **FMR** also decreases significantly, meaning that many documents fail to find their topic on the first attempt and require reprocessing.  
 
 - **1536 dimensions**:  
-  While semantic expressiveness increases slightly, the curse of dimensionality reduces distance discriminability. This leads to unstable clustering behaviors, fragmented topics, and increased runtime (larger NormTime).  
+  While higher-dimensional vectors provide slightly richer representations, they also suffer from the **curse of dimensionality**. Distance metrics become less discriminative, leading to unstable topic assignments and fragmented clusters. Moreover, computational cost increases substantially, reflected in larger normalized runtime values.  
 
 - **1024 dimensions**:  
-  Strikes the best balance. It preserves sufficient semantic granularity to achieve higher **NMI**, maintains a consistently strong **FMR**, and avoids excessive computational cost.  
+  This setting strikes the **best trade-off**. It preserves enough semantic granularity to achieve high **NMI**, maintains consistently strong **FMR**, and avoids the overhead associated with very high-dimensional vectors. The results demonstrate that 1024 dimensions deliver both stable clustering and efficient runtime performance.
 
 ---
 
-## Key Observations
+## Key Insights
 
-1. **Trade-off Balance**  
-   - Low-dimensional embeddings (384/768) are efficient but sacrifice semantic resolution.  
-   - High-dimensional embeddings (1536) provide richer features but introduce instability and overhead.  
-   - **1024 dimensions consistently outperform other choices in overall score.**
+1. **Balance Between Quality and Efficiency**  
+   Lower dimensions (384/768) run faster but compromise semantic resolution. Higher dimensions (1536) enrich semantics but introduce instability and inefficiency. **1024 dimensions consistently outperform all other choices** by balancing these two extremes.  
 
-2. **FastMatchRate (FMR) as a Critical Factor**  
-   - FMR reflects the *streaming nature* of our system: a higher FMR means fewer documents need secondary processing, directly boosting system throughput.  
-   - This metric differentiates our analysis from conventional offline clustering, emphasizing the practical impact of dimensionality in **real-time publish/subscribe**.
+2. **The Role of FastMatchRate (FMR)**  
+   Unlike conventional clustering metrics, **FMR** directly measures *streaming robustness*. A higher FMR means documents are more likely to be matched on the fly, reducing computational overhead. This metric highlights the **practical value** of embedding dimensionality in online systems, beyond static clustering accuracy.  
 
-3. **Final Decision**  
-   - Based on the above, we adopt **1024 dimensions** as the default setting in DISPS.  
-   - This choice is not arbitrary, but empirically validated by experiments balancing **accuracy (NMI)**, **robustness (FMR)**, and **efficiency (NormTime)**.
+3. **Justification of Default Choice**  
+   Based on empirical evidence, we adopt **1024 dimensions** as the default configuration in DISPS. This choice is not arbitrary but supported by systematic evaluation across accuracy (NMI), stability (FMR), and efficiency (NormTime).
 
 ---
 
 ## Conclusion
 
-These experiments validate that **1024-dimensional embeddings** provide the most favorable trade-off between semantic expressiveness and runtime efficiency in our framework.  
-Detailed results and the evaluation formula are made available here to ensure transparency and reproducibility of our study.
+This analysis demonstrates that embedding dimensionality has a **non-trivial impact** on both the quality and scalability of real-time publish/subscribe systems.  
+Our results confirm that **1024-dimensional embeddings** provide the most favorable balance, making them the best choice for DISPS.  
+
+By sharing these results, we aim to increase transparency and reproducibility of our study. The **score function**, **evaluation process**, and **raw experimental results** are available in this repository for further inspection.
