@@ -1,6 +1,5 @@
 # Embedding Dimension Analysis
 
-In response to **Reviewer Comment D11**, we conducted a dedicated experiment to study the effect of embedding dimensionality on the performance of our framework.  
 The goal of this analysis is to understand how different vector dimensions influence the balance between **clustering accuracy**, **online stability**, and **processing efficiency**.  
 Such a study is crucial because the choice of dimensionality directly affects both **semantic expressiveness** and **system scalability** in real-time publish/subscribe scenarios.
 
