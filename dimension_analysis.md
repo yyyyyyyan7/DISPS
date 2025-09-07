@@ -15,7 +15,7 @@ $$
 where:
 - **NMI** (Normalized Mutual Information): Measures agreement with ground-truth topics. A higher value indicates better clustering accuracy.
 - **FMR (FastMatchRate)**: The probability that a document is directly assigned to an existing topic *during streaming*, without needing a second round of processing. A higher FMR reflects stronger online stability and reduced overhead.
-- **NormTime**: Processing time normalized to the range \([0,1]\). Lower values indicate better efficiency; we use \(1 - \text{NormTime}\) so that faster systems contribute positively to the score.
+- **NormTime**: Processing time normalized to the range \([0,1]\). Lower values indicate better efficiency; we use $$\(1 - \text{NormTime}\)$$ so that faster systems contribute positively to the score.
 
 This formulation ensures that no single factor dominates. Instead, it captures the **three key dimensions** that matter in our streaming system:
 1. **Accuracy (NMI)**: Do embeddings help separate topics correctly?
@@ -47,9 +47,9 @@ The results are summarized in the following figure:
 ### Model Information for Each Dimension
 
 - **1536 Dimensions**: The embedding model used is Qwen2 (https://huggingface.co/Alibaba-NLP/gte-Qwen2-1.5B-instruct).
+- **1024 Dimensions**: The embedding model used is BGE_LARGE (https://huggingface.co/BAAI/bge-large-en-v1.5).
 - **768 Dimensions**: The embedding model used is E5 (https://huggingface.co/intfloat/multilingual-e5-base).
 - **384 Dimensions**: The embedding model used is BGE_SMALL (https://huggingface.co/BAAI/bge-small-en-v1.5).
-- **1024 Dimensions**: The embedding model used is BGE_LARGE (https://huggingface.co/BAAI/bge-large-en-v1.5).
 
 ---
 
