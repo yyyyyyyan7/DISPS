@@ -42,7 +42,7 @@ The results are summarized in the following figure:
   
 - **1536 dimensions**: While higher-dimensional vectors provide slightly richer representations, they also suffer from the **curse of dimensionality**. Distance metrics become less discriminative, leading to unstable topic assignments and fragmented clusters. Moreover, computational cost increases substantially, reflected in larger normalized runtime values.
 
-- **1024 dimensions**: Across multiple parameter settings, this dimensionality consistently produces stronger results. It preserves enough semantic granularity to achieve high **NMI**, maintains strong **FMR**, and avoids the overhead associated with very high-dimensional vectors. The cluster of points in the figure shows that 1024 dimensions achieve both high scores and stable behavior across runs.
+- **768 vs. 1024 dimensions**: Both 768 and 1024 dimensions provide strong performance, with **1024** slightly outperforming **768**. While 768 dimensions offer good clustering accuracy (high **NMI**) and decent **FMR**, the **1024 dimensions** preserve better semantic granularity, achieving a more stable and efficient clustering process. The **FMR** for 1024 dimensions is also higher, meaning more documents are matched on the fly, reducing the need for reprocessing. In terms of **NMI** and **FMR**, 1024 dimensions maintain a more consistent and robust performance across various configurations, which is why we selected it as the default choice.
 
 ### Model Information for Each Dimension
 
