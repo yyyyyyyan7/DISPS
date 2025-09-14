@@ -1,4 +1,4 @@
-dataset,alpha,beta,topics,NMI,matched,total,coverage_%,FMR_%,runtime_s,phase,
+dataset,alpha,beta,topics,NMI,fast_matched,total,coverage_%,FMR_%,runtime_s,phase,
 T,0.4,0.5,394,0.0000,5938,11108,53.46,53.46,2721.58,coarse,
 T,0.4,0.6,263,0.8694,5978,11108,53.82,53.82,1447.36,coarse,
 T,0.4,0.7,234,0.8734,7075,11108,63.69,63.69,1071.06,coarse,
@@ -939,5 +939,6 @@ News,0.7,0.76,225,0.8642,7713,11109,69.43,69.43,20.99,refine,
 News,0.7,0.77,223,0.8706,7675,11109,69.09,69.09,20.92,refine,
 News,0.7,0.78,201,0.8490,7898,11109,71.10,71.10,19.73,refine,
 News,0.7,0.79,205,0.8539,8287,11109,74.60,74.60,20.15,refine,
+
 
 
