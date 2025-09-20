@@ -43,8 +43,8 @@ public:
     float threshold_topic;                                 
     bool test_f ;                                 
     float alpha = 0.66;
-    float beta2 = 0.05;
-    float LAMDA = 0.000006;                           
+    float beta2 = 0.76;
+    float LAMDA = 0.0004;                           
     bool use_single_distance = false;
     std::mutex mtx1;        
     std::mutex mtx2;
@@ -1114,5 +1114,6 @@ public:
 
 };
 #endif
+
 
 
