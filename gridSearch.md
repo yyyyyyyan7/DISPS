@@ -26,13 +26,13 @@ Here, $\mathrm{NormTime}\in[0,1]$ denotes the runtime normalized via min–max s
 ## Coarse Grid Search
 
 We first explored a wide range of $(\alpha, \beta)$ to understand overall trends.  
-Representative results on **Dataset T** are shown below.
+Representative results on **TSet Dataset** are shown below.
 
 - **NMI** remains *consistently high* across most $(\alpha,\beta)$ settings, indicating **low sensitivity** to these parameters. The best NMI concentrates around **moderate-to-high $\alpha$** with **small-to-moderate $\beta$**, with several nearby configurations showing comparably strong quality.  
 - In contrast, **FMR** and **Time** vary more substantially. Increasing **$\beta$** generally **raises FMR** and **reduces Time**, but **too large $\beta$** degrades **NMI**. The influence of **$\alpha$** on efficiency is **secondary** and can be **non-monotonic**; at high $\beta$, larger $\alpha$ can further suppress NMI.  
 - Guided by these observations, we refine the search to **$\alpha \in [0.60, 0.80]$** and **$\beta \in [0.70, 0.80]$** to balance accuracy and efficiency.
 
-### Representative Coarse Grid (Dataset T)
+### Representative Coarse Grid (TSet Dataset)
 
 > **FMR in %**, **Time in seconds**.
 
