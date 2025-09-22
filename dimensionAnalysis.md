@@ -1,6 +1,6 @@
 ## Embedding Dimension Analysis
 
-The goal of this analysis is to understand how different vector dimensions influence the balance between **clustering accuracy**, **online stability**, and **processing efficiency**. Such a study is crucial because the choice of dimensionality directly affects both **semantic expressiveness** and **system scalability** in real-time publish/subscribe scenarios. We systematically compared **384, 768, 1024, and 1536 dimensions** on the **T dataset**. This dataset was chosen because it is representative of short-text streams, where semantic boundaries are often subtle and dimensionality plays a significant role.
+The goal of this analysis is to understand how different vector dimensions influence the balance between **clustering accuracy**, **online stability**, and **processing efficiency**. Such a study is crucial because the choice of dimensionality directly affects both **semantic expressiveness** and **system scalability** in real-time publish/subscribe scenarios. We systematically compared **384, 768, 1024, and 1536 dimensions** on the **TSet Dataset**. This dataset was chosen because it is representative of short-text streams, where semantic boundaries are often subtle and dimensionality plays a significant role.
 
 ---
 
