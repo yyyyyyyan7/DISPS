@@ -46,6 +46,8 @@ public:
     float beta2 = 0.76;
     float LAMDA = 0.0004;                           
     bool use_single_distance = false;
+    double lambda = 4e-4;   // decay rate λ
+    double min_keep = 1e-10; // threshold to consider a topic "old"
     std::mutex mtx1;        
     std::mutex mtx2;
     std::mutex mtx3;
@@ -68,7 +70,7 @@ public:
     std::map<int,std::set<int>> layer_middle_neighbors; 
     std::map<int,std::set<int>> layer_down_neighbors;   
 
-    std::map<int,int> topic_latest_update;         
+    std::map<int,int> pivot_latest_update;         
     int global_time_index = 0;                  
     std::map<int,float> top_K_limit;                    
     ///////////////for HNSW over
@@ -84,7 +86,7 @@ public:
     
     std::map<int, std::map<int,float>> Pivot_SUB_list; 
     using TimePoint = std::chrono::time_point<std::chrono::system_clock, std::chrono::seconds>;
-    std::vector<TimePoint> lastUpdateTime;
+    
    
     
     std::vector<std::string> intersection(const std::vector<std::string>& v1, const std::vector<std::string>& v2) {
@@ -117,7 +119,7 @@ public:
         gen.seed(3404);
         global_time_index = 0;                  
     }
-    // 构造函数
+   
     TOPIC_index(int num_topics) : topic_num(num_topics) {
         topic_state.resize(num_topics);
         words_num.resize(num_topics);
@@ -138,7 +140,7 @@ public:
 
     void erase_pivot(int chosen){   
         if(test_f) std::cout<<"erase_pivot"<<std::endl;
-
+        pivot_latest_update.erase(chosen);
         active_PIVOT_num--;
         TOPIC_pivot[pivot_TOPIC[chosen]].erase(chosen);
         pivot_TOPIC.erase(chosen);
@@ -404,11 +406,9 @@ public:
             //std::cout<<"curr_dist: "<<curr_dist<<" "<<threshold_topic<<std::endl;
         }
         if(curr_dist < threshold_topic){                    
-            // curr_dist +=0.4;
-            // radius[curr_obj] = std::max(radius[curr_obj] , curr_dist);
             addItem(curr_obj , line2vec, vector);
             global_time_index++;
-            topic_latest_update[curr_obj] = global_time_index;
+            pivot_latest_update[pivot_nearest] = global_time_index;
             return curr_obj;
         }
 
@@ -572,7 +572,6 @@ public:
         
         topic_SUB[topic_num] = std::set<int>();    
         if(flg)update_PIVOT(topic_num);  
-        topic_latest_update[topic_num] = global_time_index;
 
         topic_num++;  
         if(flg)check_old_topic();
@@ -580,22 +579,35 @@ public:
        if(test_f) std::cout<<"end_add_topic over"<<std::endl;
     }
 
-    void check_old_topic(){
-        if(test_f)std::cout<<"check_old_topic"<<std::endl;
-        int thres_topic = global_time_index - 100000;
-        if(thres_topic<=0)return ;       
-        std::set<int> to_be_erase;
-        for(auto x : topic_latest_update){
-            if(x.second < thres_topic){         
-                erase_old_topic(x.first);
-                to_be_erase.insert(x.first);
+    void check_old_topic() {
+        if (test_f) std::cout << "check_old_topic" << std::endl;
+        int now = global_time_index;
+        std::vector<int> to_erase;
+        to_erase.reserve(pivot_latest_update.size());
+
+        for (auto it = pivot_latest_update.begin(); it != pivot_latest_update.end(); ++it) {
+            int p = it->first;
+            int last  = it->second;
+            int dt    = now - last;
+            if (dt <= 0) continue; 
+            double decay_score = std::exp2(-lambda * static_cast<double>(dt));
+
+            if (decay_score < min_keep) {
+                if(TOPIC_pivot[pivot_TOPIC[p]].size()==1){
+                    erase_old_topic(pivot_TOPIC[p]);
+                }else{
+                    erase_pivot(p);
+                }
+                to_erase.push_back(p);
             }
+        }    
+        for (int pivot : to_erase) {
+            pivot_latest_update.erase(pivot);
         }
-        for(int i:to_be_erase){
-            topic_latest_update.erase(i);
-        }
-        if(test_f)std::cout<<"check_old_topic over"<<std::endl;
+        if (test_f) std::cout << "check_old_topic over" << std::endl;
     }
+
+
     void reshape_top_k(int sub_id ,int chosen){  
         if(test_f)std::cout<<"reshape_top_k"<<std::endl;
         std::priority_queue<std::pair<float, int>, std::vector<std::pair<float, int>>, CompareByFirstBig> new_topk;
@@ -657,7 +669,6 @@ public:
     }
 
     void erase_old_topic(int chosen){  
-;
         for(int pi:TOPIC_pivot[chosen]){
             erase_pivot(pi);
         }
@@ -681,7 +692,7 @@ public:
         if(test_f)std::cout<<"Insert_PIVOT_into_HNSW: "<<active_PIVOT_num<<std::endl;
         int p_id = pivot_id;
         active_PIVOT_num ++;    
-
+        pivot_latest_update[pivot_id] = global_time_index;
         if(active_PIVOT_num==1){    
             layer_up_neighbors[pivot_id] = std::set<int>();     
             layer_down_neighbors[pivot_id] = std::set<int>();  
@@ -933,9 +944,7 @@ public:
         low_limit_top.emplace_back(0);     //
         TimePoint currentTime = std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now());
         // 
-        lastUpdateTime.push_back(currentTime);
         if(test_f)std::cout<<"addtopic over"<<std::endl;
-
     }
     
     void find_topK_topic(std::vector<float>& vector, int SUB_ID) { 
@@ -1114,6 +1123,7 @@ public:
 
 };
 #endif
+
 
 
 
