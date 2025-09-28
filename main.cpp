@@ -13,17 +13,10 @@
 namespace Config {
     constexpr int DIM = 1024;
     constexpr float ALPHA = 0.66f;
-    constexpr float BETA = 8.88889f;
-    constexpr float TOPIC_THRESHOLD = 0.802f;
-    constexpr float MERGE_THRESHOLD = 0.3f;
-
-    constexpr int CHECK_FREQ = 10;
+    constexpr float BETA = 0.76f;
+    constexpr int CHECK = 10;
     constexpr bool TEST_MODE = false;
-
     constexpr int PUB_START_IDX = 1;
-    constexpr int MAX_PUB_COUNT = 1000000;
-    constexpr int SUB_LIMIT = 100000;
-    constexpr int REMAKE_INTERVAL = 10000;
 }
 
 // Global objects
@@ -93,7 +86,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Embeddings file: " << embeddings_file_path << std::endl;
 
     // Initialize clustering and topic index with configuration parameters
-    topic_clu.iniDimandThres(Config::DIM, Config::ALPHA, Config::TEST_MODE, Config::CHECK_FREQ);
+    topic_clu.iniDimandThres(Config::DIM, Config::ALPHA, Config::TEST_MODE, Config::CHECK);
     topic_index.ini(Config::BETA, Config::TEST_MODE);
 
     std::vector<std::vector<std::string>> text_data;
@@ -133,13 +126,7 @@ int main(int argc, char* argv[]) {
                 topic_clu.online_add(embedding, topic_index, text_line);
             }
 
-            // Periodically rebuild the clustering index
-            if (pub_count % Config::REMAKE_INTERVAL == 0) {
-                std::cout << "Remaking clusters at publish count: " << pub_count << std::endl;
-                topic_clu.remake();
-            }
-
-            if (pub_count >= Config::MAX_PUB_COUNT) {
+            if (pub_count >= 2000000) {
                 std::cout << "Reached maximum publish count limit. Exiting loop." << std::endl;
                 break;
             }
@@ -149,7 +136,7 @@ int main(int argc, char* argv[]) {
 
             // Process subscription queries (top-K topic search)
             topic_index.find_topK_topic(embedding, SUB_id++);
-            if (sub_count >= Config::SUB_LIMIT) {
+            if (sub_count >= 1000000) {
                 publish_mode = true;
                 // Reset index to start publishing from configured start index
                 i = Config::PUB_START_IDX - 1; // Because for loop increments i after continue
@@ -168,3 +155,4 @@ int main(int argc, char* argv[]) {
     std::cout << "Program finished successfully." << std::endl;
     return 0;
 }
+
