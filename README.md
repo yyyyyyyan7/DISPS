@@ -12,7 +12,7 @@ DISPS is an advanced, scalable publish/subscribe framework tailored for real-tim
 
 Conventional publish/subscribe (pub/sub) systems predominantly rely on keyword or syntactic matching, which often leads to imprecise content delivery, limited semantic understanding, and inability to adapt to topic drift over time. These limitations pose significant challenges in scenarios such as social media monitoring, news aggregation, and intelligent notification services, where semantics and evolving user interests are critical.
 
-To overcome these challenges, DISPS introduces a **dual-index architecture** that models evolving semantic topics via dynamically maintained pivots and incorporates robust distance metrics to ensure accurate clustering and subscription matching.
+To overcome these challenges, DISPS introduces a **dual-index architecture** that models evolving semantic topics via dynamically maintained pivots and incorporates robust distance function to ensure accurate clustering and subscription matching.
 
 **Key components:**
 
@@ -22,8 +22,8 @@ To overcome these challenges, DISPS introduces a **dual-index architecture** tha
 - **TopicIndex**  
   A hierarchical semantic index managing stable and evolving topics represented by dynamically generated pivot embeddings. It supports topic evolution by continuously updating pivot positions, merging semantically close topics, and pruning obsolete ones, thereby maintaining a concise yet expressive topic space.
 
-- **LocalPair Distance Metric**  
-  A novel, pivot-based distance metric leveraging pairs of nearest points for enhanced cluster assignment accuracy. This metric improves noise robustness and effectively balances representational fidelity with computational efficiency, outperforming conventional single-pivot or centroid-based measures.
+- **LocalPair Distance**  
+  A novel distance function leveraging pairs of nearest points for enhanced cluster assignment accuracy. This function improves noise robustness and effectively balances representational fidelity with computational efficiency, outperforming conventional single-pivot or centroid-based measures.
 
 - **Dynamic Top-$k$ Matching**  
   An incremental subscription matching mechanism that efficiently maintains top-$k$ relevant topics for each subscriber. It handles semantic drift in real-time, ensuring subscription results remain accurate and up-to-date as topics evolve.
